@@ -6,7 +6,7 @@ class Trainer:
         self.lr_scheduler = lr_scheduler
         self.log_interval = log_interval
         self.progress_bar_desc = "ITERATION - loss: {:.2f}"
-        self.trainer_engine = create_supervised_trainer(model, loss, optimizer,device=device)
+        self.trainer_engine = create_supervised_trainer(model, optimizer, loss, device=device)
         self.trainer_engine.add_event_handler(Events.ITERATION_COMPLETED(every=log_interval), 
                             self.log_training_loss)
         self.trainer_engine.add_event_handler(Events.EPOCH_COMPLETED, 

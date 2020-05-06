@@ -3,6 +3,6 @@ def get_metrics(loss):
     metrics={
         'accuracy': Accuracy(),
         'nll': Loss(loss),
-        'recall': Recall(),
+        'recall': Recall(average=True),
         }
     return metrics

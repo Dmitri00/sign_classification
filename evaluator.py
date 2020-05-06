@@ -12,10 +12,11 @@ class Evaluator:
     def build_val_results_fmt(self, metrics):
         val_results_fmt = "Validation Results - Epoch: {epoch:}"
         for metric_name in metrics.keys():
-            metric_value_fmt = Template('{{$metric_name:$precision}}').substitute(
+            metric_value_fmt = Template('{$metric_name:$precision}').substitute(
                 metric_name=metric_name, precision='5.2f'
             )
-            val_results_fmt += " Avg {:10}: {value_fmt:s}".format(metric_name,
+            metric_name_ = 'Avg ' + metric_name  
+            val_results_fmt += " {:>12}: {value_fmt:s}".format(metric_name_,
                                                                   value_fmt=metric_value_fmt)
         return val_results_fmt
     def log_validation_results(self, engine):

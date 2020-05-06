@@ -8,14 +8,15 @@ from torch import nn
 import torchvision
 
 
-from . import utils
-from .import_traffic_sign import import_data
-from .setup_optim import setup_optim
-from .model import Net
-from .trainer import Trainer
-from .logger import Logger
-from .evaluator import Evaluator
-from .metrics import get_metrics
+import utils
+from dataset_import.import_traffic_sign import import_data
+from dataset_import.import_fake_dataset import import_data as import_fake_data
+from setup_optim import setup_optim
+from model import Net
+from trainer import Trainer
+from logger import Logger
+from evaluator import Evaluator
+from metrics import get_metrics
 
 
 def load_data(root, batch_size, num_workers):
@@ -24,7 +25,7 @@ def load_data(root, batch_size, num_workers):
     
     print("Loading training data")
     st = time.time()
-    datasets, dataloaders = import_data(root, batch_size, num_workers)
+    datasets, dataloaders = import_fake_data(root, batch_size, num_workers)
     print("Took", time.time() - st)
     return datasets, dataloaders
 
@@ -48,11 +49,11 @@ def main(args):
 
     print("Creating model")
     model = Net(num_classes=datasets['train'].num_classes)
-    model.to(device)   
+     
 
     criterion, optimizer, lr_scheduler = setup_optim(model, args)
     logger = Logger(len(dataloaders['train']))
-    trainer = Trainer(model, criterion, optimizer, lr_scheduler, device, logger, args.prin_freq)
+    trainer = Trainer(model, criterion, optimizer, lr_scheduler, device, logger, args.print_freq)
     metrics = get_metrics(criterion)
     evaluator = Evaluator(trainer.trainer_engine, model, metrics, dataloaders['val'], logger)
     if args.test_only:
@@ -77,8 +78,8 @@ def parse_args():
     parser.add_argument('-b', '--batch-size', default=32, type=int)
     parser.add_argument('--epochs', default=90, type=int, metavar='N',
                         help='number of total epochs to run')
-    parser.add_argument('-j', '--workers', default=16, type=int, metavar='N',
-                        help='number of data loading workers (default: 16)')
+    parser.add_argument('-j', '--workers', default=1, type=int, metavar='N',
+                        help='number of data loading workers (default: 1)')
     parser.add_argument('--lr', default=0.1, type=float, help='initial learning rate')
     parser.add_argument('--momentum', default=0.9, type=float, metavar='M',
                         help='momentum')
