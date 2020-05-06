@@ -8,14 +8,14 @@ from torch import nn
 import torchvision
 
 
-import utils
-from import_traffic_sign import import_data
-from setup_optim import setup_optim
-from model import Net
-from trainer import Trainer
-from logger import Logger
-from evaluator import Evaluator
-from metrics import get_metrics
+from . import utils
+from .import_traffic_sign import import_data
+from .setup_optim import setup_optim
+from .model import Net
+from .trainer import Trainer
+from .logger import Logger
+from .evaluator import Evaluator
+from .metrics import get_metrics
 
 
 def load_data(root, batch_size, num_workers):

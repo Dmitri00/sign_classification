@@ -1,6 +1,6 @@
 import torch
 from torchvision import datasets, transforms
-import dataset_pipeline
+from . import dataset_pipeline
 
 data_transforms = {
     'train': transforms.Compose([

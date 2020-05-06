@@ -2,7 +2,7 @@ from collections import Counter
 
 import torch.nn as nn
 
-from datasets import TrafficSign, TrafficSignSubset
+from .datasets import TrafficSign, TrafficSignSubset
 
 class SubsetDatasetsBase(nn.Module):
   def forward(self, dataset):
