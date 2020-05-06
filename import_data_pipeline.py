@@ -20,7 +20,7 @@ dataset_split_pipeline = dataset_pipeline.DatasetSubsetPipeline(dataset_pipeline
 def prepare_datasets(dataset_class, root, transforms, splitters):
   datasets = {image_set: dataset_class(root, image_set, transforms[image_set])
                 for image_set in ['train', 'val']}
-  return splitters(datasets)
+  return datasets
 
 def prepare_dataloaders(datasets,
                         samplers,
@@ -34,6 +34,7 @@ def prepare_dataloaders(datasets,
 def prepare_data(dataset_class, root, transforms, splitters,
                 samplers_classes, batch_size, num_workers):
     datasets = prepare_datasets(dataset_class, root, transforms, splitters)
+    datasets = splitters(datasets)
     samplers = {x: samplers_classes[x](datasets[x])
                 for x in ['train', 'val']}
     dataloaders = prepare_dataloaders(datasets, samplers, batch_size, num_workers)

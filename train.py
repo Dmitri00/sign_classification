@@ -6,7 +6,7 @@ import torch
 import torch.utils.data
 from torch import nn
 import torchvision
-from torchvision import transforms
+
 
 import utils
 from import_traffic_sign import import_data
@@ -52,8 +52,8 @@ def main(args):
 
     criterion, optimizer, lr_scheduler = setup_optim(model, args)
     logger = Logger(len(dataloaders['train']))
-    trainer = Trainer(model, criterion, optimizer, device, logger, args.prin_freq)
-    metrics = get_metrics()
+    trainer = Trainer(model, criterion, optimizer, lr_scheduler, device, logger, args.prin_freq)
+    metrics = get_metrics(criterion)
     evaluator = Evaluator(trainer.trainer_engine, model, metrics, dataloaders['val'], logger)
     if args.test_only:
         evaluator.run()

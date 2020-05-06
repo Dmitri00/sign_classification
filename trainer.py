@@ -3,6 +3,7 @@ from string import Template
 class Trainer:
     def __init__(self, model, loss, optimizer, lr_scheduler, device, logger, log_interval, output_dir=None):
         self.logger = logger
+        self.lr_scheduler = lr_scheduler
         self.log_interval = log_interval
         self.progress_bar_desc = "ITERATION - loss: {:.2f}"
         self.trainer_engine = create_supervised_trainer(model, loss, optimizer,device=device)
