@@ -1,15 +1,16 @@
 from torch.utils.data import DataLoader
 from torchvision.datasets import FakeData
-from import_data_pipeline import data_transforms
-from import_data_pipeline import dataset_split_pipeline 
-from import_data_pipeline import prepare_data
-from datasets import TrafficSign
+
+from datasets.import_data_pipeline import data_transforms
+from datasets.import_data_pipeline import dataset_split_pipeline
+from datasets.import_data_pipeline import prepare_data
+from datasets.traffic_sign import TrafficSign
 
 
 def import_data(root, batch_size, num_workers):
     default_transforms = data_transforms
     default_splitter = dataset_split_pipeline
-    
+
     datasets = {}
     dataloaders = {}
     for image_set in ('train', 'val'):

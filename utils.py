@@ -1,11 +1,10 @@
-from collections import defaultdict, deque
 import datetime
+import errno
+import os
 import time
 import torch
 import torch.distributed as dist
-
-import errno
-import os
+from collections import defaultdict, deque
 
 
 class SmoothedValue(object):

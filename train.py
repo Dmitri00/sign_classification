@@ -1,28 +1,26 @@
 import datetime
 import os
 import time
-
 import torch
 import torch.utils.data
-from torch import nn
 import torchvision
-
+from torch import nn
 
 import utils
-from dataset_import.import_traffic_sign import import_data
 from dataset_import.import_fake_dataset import import_data as import_fake_data
-from setup_optim import setup_optim
-from model import Net
-from trainer import Trainer
-from logger import Logger
-from evaluator import Evaluator
-from metrics import get_metrics
+from dataset_import.import_traffic_sign import import_data
+from engines.evaluator import Evaluator
+from engines.metrics import get_metrics
+from engines.setup_optim import setup_optim
+from engines.trainer import Trainer
+from logger.logger import Logger
+from models.net import Net
 
 
 def load_data(root, batch_size, num_workers):
     # Data loading code
     print("Loading data")
-    
+
     print("Loading training data")
     st = time.time()
     datasets, dataloaders = import_fake_data(root, batch_size, num_workers)
@@ -34,7 +32,6 @@ def main(args):
     if args.output_dir:
         utils.mkdir(args.output_dir)
 
-    
     print(args)
 
     if 'cuda' in args.device and torch.cuda.is_available():
@@ -42,14 +39,11 @@ def main(args):
     else:
         device = torch.device('cpu')
 
-
     torch.backends.cudnn.benchmark = True
     datasets, dataloaders = load_data(args.data_path, batch_size=args.batch_size, num_workers=args.workers)
-    
 
     print("Creating model")
     model = Net(num_classes=datasets['train'].num_classes)
-     
 
     criterion, optimizer, lr_scheduler = setup_optim(model, args)
     logger = Logger(len(dataloaders['train']))
