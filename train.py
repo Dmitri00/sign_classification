@@ -1,12 +1,13 @@
 import datetime
 import os
+import errno
 import time
 import torch
 import torch.utils.data
 import torchvision
 from torch import nn
 
-import utils
+#import utils
 from dataset_import.import_fake_dataset import import_data as import_fake_data
 from dataset_import.import_traffic_sign import import_data
 from engines.evaluator import Evaluator
@@ -15,6 +16,14 @@ from engines.setup_optim import setup_optim
 from engines.trainer import Trainer
 from logger.logger import Logger
 from models.net import Net
+
+
+def mkdir(path):
+    try:
+        os.makedirs(path)
+    except OSError as e:
+        if e.errno != errno.EEXIST:
+            raise
 
 
 def load_data(root, batch_size, num_workers):
@@ -30,26 +39,26 @@ def load_data(root, batch_size, num_workers):
 
 def main(args):
     if args.output_dir:
-        utils.mkdir(args.output_dir)
+        mkdir(args.output_dir)
 
     print(args)
 
     if 'cuda' in args.device and torch.cuda.is_available():
         device = torch.device("cuda:0")
+        torch.backends.cudnn.benchmark = True
     else:
         device = torch.device('cpu')
 
-    torch.backends.cudnn.benchmark = True
     datasets, dataloaders = load_data(args.data_path, batch_size=args.batch_size, num_workers=args.workers)
 
     print("Creating model")
-    model = Net(num_classes=datasets['train'].num_classes)
-
+    model = Net(num_classes=datasets['train'].num_classes).to(device)
+    print(device)
     criterion, optimizer, lr_scheduler = setup_optim(model, args)
     logger = Logger(len(dataloaders['train']))
     trainer = Trainer(model, criterion, optimizer, lr_scheduler, device, logger, args.print_freq)
     metrics = get_metrics(criterion)
-    evaluator = Evaluator(trainer.trainer_engine, model, metrics, dataloaders['val'], logger)
+    evaluator = Evaluator(trainer.trainer_engine, model, metrics, dataloaders['val'], device, logger)
     if args.test_only:
         evaluator.run()
         return

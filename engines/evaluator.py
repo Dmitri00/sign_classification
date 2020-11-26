@@ -3,16 +3,16 @@ from string import Template
 
 
 class Evaluator:
-    def __init__(self, trainer_engine, model, metrics, val_loader, logger):
+    def __init__(self, trainer_engine, model, metrics, val_loader, device, logger):
         self.logger = logger
         self.val_loader = val_loader
         self.metrics = metrics
         self.val_results_fmt = self.build_val_results_fmt(metrics)
-        self.evaluator_engine = create_supervised_evaluator(model, metrics)
+        self.evaluator_engine = create_supervised_evaluator(model, metrics, device=device)
         trainer_engine.add_event_handler(Events.EPOCH_COMPLETED, self.log_validation_results)
 
     def build_val_results_fmt(self, metrics):
-        val_results_fmt = "Validation Results - Epoch: {epoch:}"
+        val_results_fmt = "\nValidation Results - Epoch: {epoch:}"
         for metric_name in metrics.keys():
             metric_value_fmt = Template('{$metric_name:$precision}').substitute(
                 metric_name=metric_name, precision='5.2f'
