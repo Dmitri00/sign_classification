@@ -1,35 +1,44 @@
 import numpy as np
+from abc import abstractmethod, ABC
 import os
 import torch
 import torch.nn as nn
 from PIL import Image
 from collections import Counter
 from torchvision import datasets, models, transforms
-class ImgClassificationDataset(torch.utils.data.Dataset):
-    def __init__(selfself, root, image_set, transforms):
+class ImgClassificationDataset(torch.utils.data.Dataset, ABC):
+    @abstractmethod
+    def __init__(self):
+        pass
+class ImgClassificationSourceDataset(torch.utils.data.Dataset, ABC):
+    def __init__(self, root, image_set, transforms):
         super().__init__()
-        """
-        self.root, self.gt_name = self.get_ds_path(root, image_set)
+        self.img_root, self.gt_name = self.get_ds_path(root, image_set)
         self.transforms = transforms
-        self.imgs = self.list_images(self.root)
+        self.imgs = self.list_imgs()
         self.ground_truth = self.parse_ground_truth(self.gt_name)
+
+        self.setup_ds_metadata()
+
+    def setup_ds_metadata(self):
         self.label_counter = Counter(self.ground_truth)
         self.labels = sorted(self.label_counter.keys())
         self.num_classes = len(self.labels)
-        """
 
+    @abstractmethod
+    def get_ds_path(self, root, image_set):
+        pass
     @abstractmethod
     def parse_ground_truth(self, gt_name):
         pass
-
-    def list_images(self, root):
-        files_in_dir = os.listdir(root)
-        return sorted(files_in_dir)
+    @abstractmethod
+    def list_imgs(self):
+        pass
 
     def __getitem__(self, idx):
         # load images ad masks
         img_name = self.imgs[idx]
-        img_path = os.path.join(self.root, img_name)
+        img_path = os.path.join(self.img_root, img_name)
         label = self.ground_truth[idx]
         img = Image.open(img_path).convert("RGB")
 
@@ -42,36 +51,37 @@ class ImgClassificationDataset(torch.utils.data.Dataset):
         return img, label
 
 
-class TrafficSign(ImgClassificationDataset):
+class TrafficSign(ImgClassificationSourceDataset):
     def __init__(self, root, image_set, transforms):
-        super().__init__()
-        if image_set == 'train':
-            self.root = os.path.join(root, 'train')
-            self.gt_name = os.path.join(root, "gt_train.csv")
-        elif image_set == 'val' or image_set == 'test':
-            self.root = os.path.join(root, 'test')
-            self.gt_name = os.path.join(root, "gt_test.csv")
-        self.transforms = transforms
+        super().__init__(root, image_set, transforms)
         # load all image files, sorting them to
         # ensure that they are aligned
-        files_in_dir = os.listdir(self.root)
-        self.imgs = sorted(files_in_dir)
-        with open(self.gt_name, 'r') as gt_file:
-            gt_lines = gt_file.readlines()
-        self.ground_truth = self.parse_ground_truth(gt_lines[1:])
-        self.num_classes = len(self.labels)
 
-    def parse_ground_truth(self, gt_lines):
+    def list_imgs(self):
+        files_in_dir = os.listdir(self.img_root)
+        return sorted(files_in_dir)
+
+    def get_ds_path(self, root, image_set):
+        if image_set == 'train':
+            img_root = os.path.join(root, 'train')
+            gt_name = os.path.join(root, "gt_train.csv")
+        elif image_set == 'val' or image_set == 'test':
+            img_root = os.path.join(root, 'test')
+            gt_name = os.path.join(root, "gt_test.csv")
+        else:
+            raise ValueError("Can't parse image set name: {:}".format(image_set))
+        return img_root, gt_name
+
+    def parse_ground_truth(self, gt_name):
+        with open(gt_name, 'r') as gt_file:
+            gt_lines = gt_file.readlines()
+        gt_lines = gt_lines[1:]
         ground_truth = []
-        label_counter = Counter()
         for entry_line in gt_lines:
             entry_splited = entry_line.split(',')
             img_name = entry_splited[0]
             label = int(entry_splited[1])
-            label_counter[label] += 1
             ground_truth.append(label)
-        self.labels = sorted(label_counter.keys())
-        self.label_counter = label_counter
         return ground_truth
 
     def subset(self, indices):
@@ -80,7 +90,7 @@ class TrafficSign(ImgClassificationDataset):
     def __getitem__(self, idx):
         # load images ad masks
         img_name = self.imgs[idx]
-        img_path = os.path.join(self.root, img_name)
+        img_path = os.path.join(self.img_root, img_name)
         label = self.ground_truth[idx]
         img = Image.open(img_path).convert("RGB")
 
@@ -95,7 +105,7 @@ class TrafficSign(ImgClassificationDataset):
     def subset_by_predicat(self, predicat_fn):
         new_indices = []
         for idx, img_name in enumerate(self.imgs):
-            img_path = os.path.join(self.root, img_name)
+            img_path = os.path.join(self.img_root, img_name)
             label = self.ground_truth[idx]
             img = Image.open(img_path).convert("RGB")
             if predicat_fn(img):
